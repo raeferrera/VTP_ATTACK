@@ -1,0 +1,38 @@
+# ══════════════════════════════════════════
+# Router IOL-0
+# E0/2 → ext-conn-0  (WAN/NAT)
+# E0/1 → SW-CORE E0/0 (trunk / router-on-a-stick)
+# Management: 10.21.99.1/24
+# ══════════════════════════════════════════
+
+mgmt_ip:   10.21.99.1
+mgmt_mask: 255.255.255.0
+
+router_interfaces:
+  - name: Ethernet0/0
+    description: "Trunk to SW-CORE — Router-on-a-Stick"
+    shutdown: no
+
+  - name: Ethernet0/1
+    description: "Uplink WAN ext-conn-0"
+    ip: dhcp
+    shutdown: no
+
+subinterfaces:
+  - name: Ethernet0/0.10
+    encap: 10
+    ip: 10.21.10.1
+    mask: 255.255.255.0
+    description: "Gateway VLAN 10 USERS"
+
+  - name: Ethernet0/0.20
+    encap: 20
+    ip: 10.21.20.1
+    mask: 255.255.255.0
+    description: "Gateway VLAN 20 SERVERS"
+
+  - name: Ethernet0/0.99
+    encap: 99
+    ip: 10.21.99.1
+    mask: 255.255.255.0
+    description: "Gateway VLAN 99 MANAGEMENT"

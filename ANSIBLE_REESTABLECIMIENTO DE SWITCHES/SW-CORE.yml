@@ -1,0 +1,26 @@
+# ══════════════════════════════════════════
+# SW-CORE (iol-l2-0)
+# E0/0 → IOL-0 E0/0  (trunk uplink al router)
+# E0/1 → SW-01 E0/0  (trunk)
+# E0/2 → SW-02 E0/0  (trunk)
+# E0/3 → sin uso
+# Management SVI: 10.21.99.2/24
+# ══════════════════════════════════════════
+
+vtp_mode: server
+
+mgmt_vlan: 99
+mgmt_ip:   10.21.99.2
+mgmt_mask: 255.255.255.0
+mgmt_gw:   10.21.99.1
+
+trunk_ports:
+  - name: Ethernet0/0
+    description: "Trunk to IOL-0 Router-on-a-Stick"
+  - name: Ethernet0/1
+    description: "Trunk to SW-01"
+  - name: Ethernet0/2
+    description: "Trunk to SW-02"
+
+unused_ports:
+  - Ethernet0/3

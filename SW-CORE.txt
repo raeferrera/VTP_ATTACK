@@ -1,0 +1,19 @@
+enable
+Password: Enable2024!
+conf t
+vlan 10
+name USERS
+exit
+vlan 20
+name SERVERS
+exit
+vlan 99
+name MANAGEMENT
+exit
+interface Vlan99
+ip address 10.21.99.2 255.255.255.0
+no shutdown
+exit
+ip default-gateway 10.21.99.1
+end
+write memory

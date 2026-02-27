@@ -1,0 +1,254 @@
+cat > ~/netsec-lab/ansible/site.yml << 'EOF'
+---
+# ══════════════════════════════════════════════════════════════
+# SITE.YML — Topología completa ITLA
+# Raelina Ferrera | 2021-2371
+# Segmento: 10.21.99.0/24
+# ══════════════════════════════════════════════════════════════
+
+- name: "RCORE | Verificar y asegurar Router"
+  hosts: routers
+  gather_facts: no
+  tasks:
+
+    - name: Subinterfaz VLAN 10
+      cisco.ios.ios_config:
+        parents: interface Ethernet0/1.10
+        lines:
+          - description "Gateway VLAN 10 USERS"
+          - encapsulation dot1Q 10
+          - ip address 10.21.10.1 255.255.255.0
+          - no shutdown
+
+    - name: Subinterfaz VLAN 20
+      cisco.ios.ios_config:
+        parents: interface Ethernet0/1.20
+        lines:
+          - description "Gateway VLAN 20 SERVERS"
+          - encapsulation dot1Q 20
+          - ip address 10.21.20.1 255.255.255.0
+          - no shutdown
+
+    - name: Subinterfaz VLAN 99
+      cisco.ios.ios_config:
+        parents: interface Ethernet0/1.99
+        lines:
+          - description "Gateway VLAN 99 MANAGEMENT"
+          - encapsulation dot1Q 99
+          - ip address 10.21.99.1 255.255.255.0
+          - no shutdown
+
+    - name: Seguridad — no cdp, no proxy-arp
+      cisco.ios.ios_config:
+        lines:
+          - no cdp run
+          - no ip proxy-arp
+          - service password-encryption
+          - ip ssh version 2
+
+    - name: Save RCORE
+      cisco.ios.ios_config:
+        save_when: always
+
+
+- name: "SW-CORE | Core Switch"
+  hosts: core_switch
+  gather_facts: no
+  tasks:
+
+    - name: VLANs base
+      cisco.ios.ios_config:
+        parents: "vlan {{ item.id }}"
+        lines:
+          - "name {{ item.name }}"
+      loop: "{{ vlans }}"
+
+    - name: VTP Server
+      cisco.ios.ios_config:
+        lines:
+          - "vtp domain {{ vtp_domain }}"
+          - vtp version 2
+          - "vtp password {{ vtp_password }}"
+          - vtp mode server
+
+    - name: Trunk E0/0 al router
+      cisco.ios.ios_config:
+        parents: interface Ethernet0/0
+        lines:
+          - description "Trunk to RCORE E0/1"
+          - switchport trunk encapsulation dot1q
+          - switchport mode trunk
+          - switchport nonegotiate
+          - switchport trunk allowed vlan 1,10,20,99
+          - ip dhcp snooping trust
+          - ip arp inspection trust
+          - no shutdown
+
+    - name: Trunk E0/1 a SW-01
+      cisco.ios.ios_config:
+        parents: interface Ethernet0/1
+        lines:
+          - description "Trunk to SW-01"
+          - switchport trunk encapsulation dot1q
+          - switchport mode trunk
+          - switchport nonegotiate
+          - switchport trunk allowed vlan 1,10,20,99
+          - no shutdown
+
+    - name: Trunk E0/2 a SW-02
+      cisco.ios.ios_config:
+        parents: interface Ethernet0/2
+        lines:
+          - description "Trunk to SW-02"
+          - switchport trunk encapsulation dot1q
+          - switchport mode trunk
+          - switchport nonegotiate
+          - switchport trunk allowed vlan 1,10,20,99
+          - no shutdown
+
+    - name: Apagar E0/3
+      cisco.ios.ios_config:
+        parents: interface Ethernet0/3
+        lines:
+          - description "UNUSED - DISABLED"
+          - switchport mode access
+          - switchport access vlan 99
+          - shutdown
+
+    - name: STP Root Bridge
+      cisco.ios.ios_config:
+        lines:
+          - spanning-tree mode rapid-pvst
+          - spanning-tree vlan 1,10,20,99 priority 4096
+
+    - name: DHCP Snooping y DAI
+      cisco.ios.ios_config:
+        lines:
+          - ip dhcp snooping
+          - ip dhcp snooping vlan 10,20,99
+          - no ip dhcp snooping information option
+          - ip arp inspection vlan 10,20,99
+
+    - name: CDP deshabilitado
+      cisco.ios.ios_config:
+        lines:
+          - no cdp run
+
+    - name: SVI Management
+      cisco.ios.ios_config:
+        parents: interface Vlan99
+        lines:
+          - description "Management SVI"
+          - ip address 10.21.99.2 255.255.255.0
+          - no shutdown
+
+    - name: Default gateway
+      cisco.ios.ios_config:
+        lines:
+          - ip default-gateway 10.21.99.1
+
+    - name: Save SW-CORE
+      cisco.ios.ios_config:
+        save_when: always
+
+
+- name: "SW-01 / SW-02 | Access Switches"
+  hosts: access_switches
+  gather_facts: no
+  tasks:
+
+    - name: VTP Client
+      cisco.ios.ios_config:
+        lines:
+          - "vtp domain {{ vtp_domain }}"
+          - vtp version 2
+          - "vtp password {{ vtp_password }}"
+          - vtp mode client
+
+    - name: Trunk E0/0 uplink
+      cisco.ios.ios_config:
+        parents: interface Ethernet0/0
+        lines:
+          - description "Trunk uplink to SW-CORE"
+          - switchport trunk encapsulation dot1q
+          - switchport mode trunk
+          - switchport nonegotiate
+          - switchport trunk allowed vlan 1,10,20,99
+          - ip dhcp snooping trust
+          - ip arp inspection trust
+          - no shutdown
+
+    - name: Puertos de acceso
+      cisco.ios.ios_config:
+        parents: "interface {{ item.name }}"
+        lines:
+          - "description {{ item.description }}"
+          - switchport mode access
+          - "switchport access vlan {{ item.vlan }}"
+          - switchport nonegotiate
+          - spanning-tree portfast
+          - spanning-tree bpduguard enable
+          - ip dhcp snooping limit rate 15
+          - no shutdown
+      loop: "{{ access_ports }}"
+
+    - name: STP y DHCP Snooping y DAI
+      cisco.ios.ios_config:
+        lines:
+          - spanning-tree mode rapid-pvst
+          - ip dhcp snooping
+          - ip dhcp snooping vlan 10,20,99
+          - no ip dhcp snooping information option
+          - ip arp inspection vlan 10,20,99
+
+    - name: CDP deshabilitado
+      cisco.ios.ios_config:
+        lines:
+          - no cdp run
+
+    - name: SVI Management
+      cisco.ios.ios_config:
+        parents: interface Vlan99
+        lines:
+          - description "Management SVI"
+          - "ip address {{ mgmt_ip }} {{ mgmt_mask }}"
+          - no shutdown
+
+    - name: Default gateway
+      cisco.ios.ios_config:
+        lines:
+          - "ip default-gateway {{ mgmt_gw }}"
+
+    - name: Save access switches
+      cisco.ios.ios_config:
+        save_when: always
+
+
+- name: "Verificacion Final"
+  hosts: all
+  gather_facts: no
+  tasks:
+
+    - name: Show ip interface brief
+      cisco.ios.ios_command:
+        commands:
+          - show ip interface brief
+      register: iface_out
+
+    - name: Show vlan brief y vtp status
+      cisco.ios.ios_command:
+        commands:
+          - show vlan brief
+          - show vtp status
+      register: vlan_out
+      when: inventory_hostname in groups['switches']
+
+    - name: Resultado interfaces
+      debug:
+        msg: "{{ iface_out.stdout_lines }}"
+
+    - name: Resultado VLANs
+      debug:
+        msg: "{{ vlan_out.stdout_lines }}"
+      when: inventory_hostname in groups['switches']
+EOF

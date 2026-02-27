@@ -1,0 +1,19 @@
+# ══════════════════════════════════════════
+# Variables globales — segmento 10.21.99.0/24
+# ══════════════════════════════════════════
+domain_name: lab-itla.local
+
+vlans:
+  - id: 10
+    name: USERS
+  - id: 20
+    name: SERVERS
+  - id: 99
+    name: MANAGEMENT
+
+vtp_domain:   LAB-ITLA
+vtp_password: VTP2024!
+
+ssh_user:    admin
+ssh_pass:    "Admin2024!"
+enable_pass: "Enable2024!"

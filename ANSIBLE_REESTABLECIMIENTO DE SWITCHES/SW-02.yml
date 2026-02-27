@@ -1,0 +1,30 @@
+# ══════════════════════════════════════════
+# SW-02 (iol-l2-2)
+# E0/0 → SW-CORE E0/2  (trunk uplink)
+# E0/1 → acceso VLAN 10 USERS
+# E0/2 → acceso VLAN 20 SERVERS
+# E0/3 → acceso VLAN 99 MANAGEMENT
+# Management SVI: 10.21.99.4/24
+# ══════════════════════════════════════════
+
+vtp_mode: client
+
+mgmt_vlan: 99
+mgmt_ip:   10.21.99.4
+mgmt_mask: 255.255.255.0
+mgmt_gw:   10.21.99.1
+
+trunk_ports:
+  - name: Ethernet0/0
+    description: "Trunk uplink to SW-CORE"
+
+access_ports:
+  - name: Ethernet0/1
+    vlan: 10
+    description: "Access VLAN 10 USERS"
+  - name: Ethernet0/2
+    vlan: 20
+    description: "Access VLAN 20 SERVERS"
+  - name: Ethernet0/3
+    vlan: 99
+    description: "Access VLAN 99 MANAGEMENT"

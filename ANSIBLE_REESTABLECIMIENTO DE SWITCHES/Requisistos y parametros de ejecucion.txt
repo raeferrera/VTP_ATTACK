@@ -1,0 +1,17 @@
+# Instalar colección si no la tienes
+ansible-galaxy collection install cisco.ios
+
+# Verificar conectividad
+ansible all -m ping -i ~/netsec-lab/ansible/inventory.ini
+
+# Ejecutar solo router
+ansible-playbook ~/netsec-lab/ansible/site.yml --limit routers -v
+
+# Ejecutar solo SW-CORE
+ansible-playbook ~/netsec-lab/ansible/site.yml --limit core_switch -v
+
+# Ejecutar solo access switches
+ansible-playbook ~/netsec-lab/ansible/site.yml --limit access_switches -v
+
+# Ejecutar TODO de una vez
+ansible-playbook ~/netsec-lab/ansible/site.yml -v

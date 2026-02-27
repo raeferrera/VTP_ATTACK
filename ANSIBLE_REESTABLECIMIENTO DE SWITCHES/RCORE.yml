@@ -1,0 +1,28 @@
+cat > ~/netsec-lab/ansible/host_vars/RCORE.yml << 'EOF'
+# ══════════════════════════════════════════
+# Router RCORE
+# E0/0  → WAN (DHCP VMware)
+# E0/1  → SW-CORE E0/0 (trunk)
+# E0/1.10 → Gateway VLAN 10 USERS
+# E0/1.20 → Gateway VLAN 20 SERVERS
+# E0/1.99 → Gateway VLAN 99 MANAGEMENT
+# E0/2  → NAT salida (DHCP VMware)
+# ══════════════════════════════════════════
+
+subinterfaces:
+  - name: Ethernet0/1.10
+    encap: 10
+    ip: 10.21.10.1
+    mask: 255.255.255.0
+    description: "Gateway VLAN 10 USERS"
+  - name: Ethernet0/1.20
+    encap: 20
+    ip: 10.21.20.1
+    mask: 255.255.255.0
+    description: "Gateway VLAN 20 SERVERS"
+  - name: Ethernet0/1.99
+    encap: 99
+    ip: 10.21.99.1
+    mask: 255.255.255.0
+    description: "Gateway VLAN 99 MANAGEMENT"
+EOF

@@ -1,0 +1,75 @@
+cat > ~/netsec-lab/ansible/reset_switches.yml << 'EOF'
+---
+- name: "Reset — limpiar VLANs no autorizadas"
+  hosts: switches
+  gather_facts: no
+  tasks:
+
+    - name: Borrar VLANs maliciosas bloque 1
+      cisco.ios.ios_config:
+        lines:
+          - no vlan 60
+          - no vlan 111
+          - no vlan 112
+          - no vlan 113
+
+    - name: Borrar VLANs maliciosas bloque 2
+      cisco.ios.ios_config:
+        lines:
+          - no vlan 222
+          - no vlan 333
+          - no vlan 444
+          - no vlan 500
+
+    - name: Borrar VLANs maliciosas bloque 3
+      cisco.ios.ios_config:
+        lines:
+          - no vlan 501
+          - no vlan 502
+          - no vlan 503
+          - no vlan 555
+
+    - name: Borrar VLANs maliciosas bloque 4
+      cisco.ios.ios_config:
+        lines:
+          - no vlan 666
+          - no vlan 667
+          - no vlan 999
+
+    - name: VTP Server en SW-CORE
+      cisco.ios.ios_config:
+        lines:
+          - vtp domain LAB-ITLA
+          - vtp version 2
+          - vtp password VTP2024!
+          - vtp mode server
+      when: inventory_hostname == "SW-CORE"
+
+    - name: VTP Client en SW-01 y SW-02
+      cisco.ios.ios_config:
+        lines:
+          - vtp domain LAB-ITLA
+          - vtp version 2
+          - vtp password VTP2024!
+          - vtp mode client
+      when: inventory_hostname in ["SW-01", "SW-02"]
+
+    - name: Write memory
+      cisco.ios.ios_config:
+        save_when: always
+
+- name: "Verificacion — solo VLANs 1, 10, 20, 99"
+  hosts: switches
+  gather_facts: no
+  tasks:
+
+    - name: Show vlan brief
+      cisco.ios.ios_command:
+        commands:
+          - show vlan brief
+      register: out
+
+    - name: Resultado
+      debug:
+        msg: "{{ out.stdout_lines }}"
+EOF

