@@ -47,10 +47,13 @@ El ataque explota que VTP acepta cualquier anuncio con revisión N+1 sin autenti
               └──────────┘
 
 
-<img width="886" height="410" alt="image" src="https://github.com/user-attachments/assets/f3302984-94ab-4ef1-922b-e20048b0507d" />
+
 
 
 ```
+
+
+<img width="886" height="410" alt="image" src="https://github.com/user-attachments/assets/f3302984-94ab-4ef1-922b-e20048b0507d" />
 
 ### Interfaces y direccionamiento
 
